@@ -1,36 +1,56 @@
-import math
-import pygame
-import random
+﻿"""Computational worker model."""
 
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+
+@dataclass
 class WorkerRobot:
-    def __init__(self, id):
-        self.id = id
-        self.x = random.randint(100, 900)
-        self.y = random.randint(100, 600)
-        self.speed = 3
-        self.target = None
+    """Simulated worker with finite computational capacity."""
 
-    def move(self):
-        if self.target is None:
-            return
+    worker_id: int
+    capacity: float = 10.0
+    allocated_workload: float = 0.0
+    assigned_items: list[int] = field(default_factory=list)
 
-        dx = self.target.x - self.x
-        dy = self.target.y - self.y
-        dist = math.hypot(dx, dy)
+    def __post_init__(self) -> None:
+        if self.worker_id < 0:
+            raise ValueError("worker_id must be non-negative")
 
-        if dist > 1:
-            self.x += self.speed * dx / dist
-            self.y += self.speed * dy / dist
+        if self.capacity <= 0:
+            raise ValueError("capacity must be positive")
 
-        if dist < 10:
-            self.target.picked = True
-            self.target.delivered = True
-            self.target = None
+    @property
+    def remaining_capacity(self) -> float:
+        """Return unused worker capacity."""
+        return max(0.0, self.capacity - self.allocated_workload)
 
-    def draw(self, screen):
-        pygame.draw.circle(screen, (50,150,255), (int(self.x), int(self.y)), 12)
+    @property
+    def utilization(self) -> float:
+        """Return normalized utilization in [0, 1]."""
+        return min(
+            1.0,
+            self.allocated_workload / self.capacity,
+        )
 
-        if self.target:
-            pygame.draw.line(screen, (0,200,0),
-                             (self.x,self.y),
-                             (self.target.x,self.target.y), 2)
+    def can_accept(self, workload: float) -> bool:
+        """Return whether this worker can accept workload."""
+        if workload <= 0:
+            raise ValueError("workload must be positive")
+
+        return self.remaining_capacity >= workload
+
+    def assign(self, item_id: int, workload: float) -> bool:
+        """Attempt to assign one item."""
+        if not self.can_accept(workload):
+            return False
+
+        self.allocated_workload += workload
+        self.assigned_items.append(item_id)
+        return True
+
+    def reset(self) -> None:
+        """Clear current allocations."""
+        self.allocated_workload = 0.0
+        self.assigned_items.clear()

@@ -1,25 +1,63 @@
-import math
+﻿"""Central allocation manager."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from src.items.item import Item
+from src.workers.worker_robot import WorkerRobot
+
+
+@dataclass
+class AllocationResult:
+    """Recorded result of one allocation operation."""
+
+    strategy: str
+    total_items: int
+    allocated_items: int
+    unallocated_items: int
+    total_workload: float
+    allocated_workload: float
+    utilization_mean: float
+    utilization_std: float
+    load_imbalance: float
+    objective_score: float
+
+    @property
+    def allocation_rate(self) -> float:
+        """Return fraction of tasks allocated."""
+        if self.total_items == 0:
+            return 1.0
+
+        return self.allocated_items / self.total_items
+
 
 class AllocationHub:
-    def __init__(self, workers, items):
+    """Validate and execute allocations against workers."""
+
+    def __init__(self, workers: list[WorkerRobot]) -> None:
+        if not workers:
+            raise ValueError("At least one worker is required")
+
         self.workers = workers
-        self.items = items
 
-    def assign_tasks(self):
-        free = [w for w in self.workers if w.target is None]
+    def reset(self) -> None:
+        """Reset all workers."""
+        for worker in self.workers:
+            worker.reset()
 
-        for w in free:
-            available = [i for i in self.items if not i.picked]
+    def allocate(
+        self,
+        items: list[Item],
+        strategy,
+    ) -> AllocationResult:
+        """Execute a supplied allocation strategy."""
+        if not items:
+            raise ValueError("At least one item is required")
 
-            if not available:
-                return
+        self.reset()
 
-            best = min(
-                available,
-                key=lambda i: math.hypot(i.x-w.x, i.y-w.y)
-            )
-
-            w.target = best
-
-    def draw(self, screen):
-        pass
+        return strategy.allocate(
+            items=items,
+            workers=self.workers,
+        )
