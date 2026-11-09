@@ -1,0 +1,38 @@
+{
+  "project": "Allocation Engine 2.0",
+  "trials_per_scenario": 20,
+  "item_counts": [
+    10,
+    25,
+    50,
+    100,
+    150,
+    200
+  ],
+  "failure_levels": [
+    0.0,
+    0.1,
+    0.25
+  ],
+  "policies": [
+    "random",
+    "first_fit",
+    "best_fit",
+    "least_loaded",
+    "priority_balanced"
+  ],
+  "worker_count": 10,
+  "worker_capacity": 10.0,
+  "expected_rows": 1800,
+  "actual_rows": 1800,
+  "unique_scenarios": 360,
+  "random_seed_start": 42,
+  "random_seed_end": 61,
+  "model_type": "Computational warehouse allocation abstraction",
+  "physical_robot_validation": false,
+  "analysis_finalized": true,
+  "summary_groups": 90,
+  "paired_comparison_groups": 72,
+  "paired_reference_policy": "first_fit",
+  "first_fit_self_comparison_excluded": true
+}
